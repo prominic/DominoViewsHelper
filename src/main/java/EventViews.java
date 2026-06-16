@@ -106,7 +106,9 @@ public class EventViews extends Event {
 				DominoUtils.recycle(view);
 			}
 
-			config.put("lastRun", new Date());
+			Date now = new Date();
+			config.put("lastRun", now);
+			config.put("lastRefresh", now);
 			DominoUtils.recycle(database);
 		} catch (NotesException e) {
 			e.printStackTrace();

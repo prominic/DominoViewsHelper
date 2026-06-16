@@ -1,3 +1,4 @@
+import java.text.SimpleDateFormat;
 import java.util.ArrayList;
 import java.util.Date;
 import java.util.HashMap;
@@ -9,6 +10,7 @@ import lotus.domino.View;
 import lotus.domino.Document;
 import net.prominic.gja_v085.JavaServerAddinGenesis;
 import net.prominic.gja_v085.utils.DominoUtils;
+import net.prominic.gja_v085.utils.StringUtils;
 
 public class ViewsHelper extends JavaServerAddinGenesis {
 	private String m_filePath = "viewshelper.nsf";
@@ -32,7 +34,7 @@ public class ViewsHelper extends JavaServerAddinGenesis {
 
 	@Override
 	protected String getJavaAddinDate() {
-		return "2026-06-16 08:00";
+		return "2026-06-16 13:30";
 	}
 	
 	protected boolean runNotesAfterInitialize() {
@@ -65,6 +67,8 @@ public class ViewsHelper extends JavaServerAddinGenesis {
 		} else if (cmd.startsWith("trigger")) {
 			m_event.run();
 			logMessage("trigger - completed");
+		} else if (cmd.startsWith("show")) {
+			showStatus();
 		} else {
 			logMessage("invalid command (use -h or help to get details)");
 		}
@@ -110,6 +114,7 @@ public class ViewsHelper extends JavaServerAddinGenesis {
 				event.put("interval", interval);
 				event.put("runIfModified", runIfModified);
 				event.put("lastRun", new Date());
+				event.put("lastRefresh", null);
 				event.put("log", log);
 				
 				list.add(event);
@@ -127,6 +132,7 @@ public class ViewsHelper extends JavaServerAddinGenesis {
 	}
 
 	protected void showHelpExt() {
+		logMessage("   show             Show what each database refreshes, frequency, last/next run");
 		logMessage("   trigger          Refresh all configured views now (from " + m_filePath + ")");
 		logMessage("   update           Reload configuration from " + m_filePath);
 	}
@@ -137,6 +143,68 @@ public class ViewsHelper extends JavaServerAddinGenesis {
 	protected void showInfoExt() {
 		logMessage("config       " + m_filePath);
 		logMessage("databases    " + m_event.configs.size());
+	}
+
+	/**
+	 * Show, per configured database, what is refreshed, how often, and when it last/next runs.
+	 */
+	private void showStatus() {
+		List<HashMap<String, Object>> configs = m_event.configs;
+		if (configs == null || configs.isEmpty()) {
+			logMessage("no databases configured in " + m_filePath);
+			return;
+		}
+
+		SimpleDateFormat sdf = new SimpleDateFormat("yyyy-MM-dd HH:mm:ss");
+		logMessage(configs.size() + " database(s) configured in " + m_filePath + ":");
+
+		for (int i = 0; i < configs.size(); i++) {
+			HashMap<String, Object> c = configs.get(i);
+
+			String server = (String) c.get("server");
+			String filePath = (String) c.get("filePath");
+			String target = (server == null || server.isEmpty() ? "" : server + "!!") + filePath;
+
+			String views;
+			if (Boolean.TRUE.equals(c.get("allViews"))) {
+				views = "ALL";
+			} else {
+				@SuppressWarnings("unchecked")
+				Vector<String> v = (Vector<String>) c.get("views");
+				views = (v == null || v.isEmpty()) ? "(none)" : v.size() + " (" + StringUtils.join(v, ", ") + ")";
+			}
+
+			long interval = (Long) c.get("interval");
+			boolean runIfModified = (Boolean) c.get("runIfModified");
+			Date lastRun = (Date) c.get("lastRun");
+			Date lastRefresh = (Date) c.get("lastRefresh");
+
+			StringBuilder schedule = new StringBuilder();
+			if (runIfModified) schedule.append("on modify");
+			if (interval > 0) {
+				if (schedule.length() > 0) schedule.append(" + ");
+				schedule.append("every ").append(interval).append("s (").append(humanInterval(interval)).append(")");
+			}
+			if (schedule.length() == 0) schedule.append("manual only (trigger)");
+
+			logMessage("- " + target);
+			logMessage("    views     : " + views);
+			logMessage("    schedule  : " + schedule);
+			logMessage("    last run  : " + (lastRefresh == null ? "not yet" : sdf.format(lastRefresh)));
+			if (interval > 0 && lastRun != null) {
+				logMessage("    next run  : ~" + sdf.format(new Date(lastRun.getTime() + interval * 1000L)));
+			}
+		}
+	}
+
+	/**
+	 * Render a seconds interval in the largest whole unit (d/h/m/s) for readability.
+	 */
+	private static String humanInterval(long seconds) {
+		if (seconds % 86400 == 0) return (seconds / 86400) + "d";
+		if (seconds % 3600 == 0) return (seconds / 3600) + "h";
+		if (seconds % 60 == 0) return (seconds / 60) + "m";
+		return seconds + "s";
 	}
 
 }
