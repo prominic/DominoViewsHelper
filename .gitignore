@@ -26,3 +26,7 @@ buildNumber.properties
 # Maven
 log/
 target/
+
+# Notes/Domino
+*.nsf
+NSF/
