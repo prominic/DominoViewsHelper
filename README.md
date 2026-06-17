@@ -30,12 +30,15 @@ It is built on the [JavaServerAddinGenesis](https://github.com/DominoGenesis/Jav
    By default the add-in processes only databases targeted at **this** server
    (config docs whose *Server* is blank or matches the local server). To process
    **every** configured database regardless of its *Server* field — e.g. one
-   instance refreshing views across several servers — add the `all` argument:
+   instance refreshing views across several servers — add the `all` keyword:
 
    ```
-   load runjava ViewsHelper viewshelper.nsf all
+   load runjava ViewsHelper all                    # default config db + all servers
+   load runjava ViewsHelper viewshelper.nsf all    # explicit config db + all servers
    ```
 
+   The arguments are order-independent: the bare keyword `all` selects all-servers
+   scope wherever it appears, and any other token is taken as the config DB path.
    Scope is a per-server, load-time choice (not stored in the config database), so
    each server controls its own behavior even when the config database is replicated.
 

@@ -26,11 +26,22 @@ public class ViewsHelper extends JavaServerAddinGenesis {
 
 	public ViewsHelper(String[] args) {
 		super(args);
-		if (args != null && args.length > 0) {
-			m_filePath = args[0];
-		}
-		if (args != null && args.length > 1) {
-			m_allServers = "all".equalsIgnoreCase(args[1]);
+		// Args are order-independent: the bare keyword "all" selects all-servers
+		// scope; any other non-empty token is taken as the config DB path. This way
+		// "ViewsHelper all", "ViewsHelper viewshelper.nsf all" and
+		// "ViewsHelper viewshelper.nsf" all behave as expected.
+		if (args != null) {
+			for (int i = 0; i < args.length; i++) {
+				String arg = args[i];
+				if (arg == null || arg.trim().isEmpty()) {
+					continue;
+				}
+				if ("all".equalsIgnoreCase(arg.trim())) {
+					m_allServers = true;
+				} else {
+					m_filePath = arg.trim();
+				}
+			}
 		}
 	}
 
@@ -45,7 +56,7 @@ public class ViewsHelper extends JavaServerAddinGenesis {
 
 	@Override
 	protected String getJavaAddinDate() {
-		return "2026-06-17 12:00";
+		return "2026-06-17 15:30";
 	}
 
 	protected boolean runNotesAfterInitialize() {
