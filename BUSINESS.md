@@ -40,6 +40,10 @@ instance has a **scope**, chosen on the load line:
 | `load runjava ViewsHelper viewshelper.nsf` | **Current server only** (default) — processes only documents whose **Server** is blank (local) or matches this server's name. |
 | `load runjava ViewsHelper viewshelper.nsf all` | **All servers** — processes every configuration document regardless of its **Server** field. |
 
+The arguments are order-independent and the config path is optional, so the keyword
+`all` works on its own too — `load runjava ViewsHelper all` uses the default
+`viewshelper.nsf` with all-servers scope.
+
 Scope is a **per-server, load-time** setting (it is *not* stored in the database), so
 each server controls its own behavior even though they share one replicated config.
 

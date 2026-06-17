@@ -26,10 +26,12 @@ base already provides.**
 ### The contract (how to extend the base correctly)
 
 - **Constructor:** call `super(args)` (NOT `super()`). The base stores `args` and
-  prints it in `info`. The no-arg ctor is only the fallback. This add-in reads two
-  positional load args: `args[0]` = config DB path (default `viewshelper.nsf`),
-  `args[1]` = server scope (`all` = every config doc; anything else/absent =
-  current-server only, the default).
+  prints it in `info`. The no-arg ctor is only the fallback. This add-in reads its
+  load args **order-independently**: the bare keyword `all` selects all-servers
+  scope wherever it appears; any other non-empty token is taken as the config DB
+  path (default `viewshelper.nsf`). Absent `all` = current-server only (the
+  default). So `ViewsHelper all`, `ViewsHelper viewshelper.nsf all`, and
+  `ViewsHelper viewshelper.nsf` all behave as expected.
 - **Implement the two abstract methods:** `getJavaAddinVersion()` and
   `getJavaAddinDate()`.
 - **Override hooks, not the whole flow:**
@@ -87,7 +89,7 @@ Item names are case-insensitive in Notes. If you add a field, wire it through th
 config `HashMap` in `getViews()` AND consume it in `EventViews.refreshView()`.
 
 **Server scope filtering:** `getViews()` skips docs targeting another server unless
-launched in `all` mode (see the constructor's `args[1]`). The own-server name is
+launched in `all` mode (see the constructor's order-independent arg parsing). The own-server name is
 resolved once into `m_serverName` and compared via `canonical(...)` so abbreviated
 and canonical `Server` values match; a blank `Server` is treated as local and always
 kept. Filtering happens at config-load (not refresh) time so `info`/`show`/counts
