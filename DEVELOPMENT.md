@@ -26,7 +26,10 @@ base already provides.**
 ### The contract (how to extend the base correctly)
 
 - **Constructor:** call `super(args)` (NOT `super()`). The base stores `args` and
-  prints it in `info`. The no-arg ctor is only the fallback.
+  prints it in `info`. The no-arg ctor is only the fallback. This add-in reads two
+  positional load args: `args[0]` = config DB path (default `viewshelper.nsf`),
+  `args[1]` = server scope (`all` = every config doc; anything else/absent =
+  current-server only, the default).
 - **Implement the two abstract methods:** `getJavaAddinVersion()` and
   `getJavaAddinDate()`.
 - **Override hooks, not the whole flow:**
@@ -82,6 +85,13 @@ code path; the `trigger` command calls `m_event.run()` (don't add a duplicate
 `ViewsHelper.getViews()` reads these items from each doc in the `($views)` view.
 Item names are case-insensitive in Notes. If you add a field, wire it through the
 config `HashMap` in `getViews()` AND consume it in `EventViews.refreshView()`.
+
+**Server scope filtering:** `getViews()` skips docs targeting another server unless
+launched in `all` mode (see the constructor's `args[1]`). The own-server name is
+resolved once into `m_serverName` and compared via `canonical(...)` so abbreviated
+and canonical `Server` values match; a blank `Server` is treated as local and always
+kept. Filtering happens at config-load (not refresh) time so `info`/`show`/counts
+reflect the active scope.
 
 | Form field        | Item read              | Meaning |
 |-------------------|------------------------|---------|

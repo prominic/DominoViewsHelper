@@ -27,6 +27,18 @@ It is built on the [JavaServerAddinGenesis](https://github.com/DominoGenesis/Jav
 
    The `.nsf` parameter is optional; it defaults to `viewshelper.nsf`.
 
+   By default the add-in processes only databases targeted at **this** server
+   (config docs whose *Server* is blank or matches the local server). To process
+   **every** configured database regardless of its *Server* field — e.g. one
+   instance refreshing views across several servers — add the `all` argument:
+
+   ```
+   load runjava ViewsHelper viewshelper.nsf all
+   ```
+
+   Scope is a per-server, load-time choice (not stored in the config database), so
+   each server controls its own behavior even when the config database is replicated.
+
 ## Configuration (`View` form)
 
 | Field         | Meaning                                                                            |
@@ -55,7 +67,8 @@ When a pass runs, **all** of the configured views (or all views in the database,
 tell ViewsHelper <command>
    quit             Unload addin
    help             Show help information (or -h)
-   info             Show version and configuration
+   info             Show version, scope, and configuration
+   show             Show what each database refreshes, frequency, last/next run
    trigger          Refresh all configured views now
    update           Reload configuration from the config database
 ```

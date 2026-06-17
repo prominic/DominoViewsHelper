@@ -28,6 +28,26 @@ All configuration is stored as documents in a **configuration database**
 target database.** The add-in is told which config database to use when it is loaded
 (`load runjava ViewsHelper viewshelper.nsf`).
 
+## Server scope (current server vs all servers)
+
+The configuration database is typically **replicated** across servers, so the same
+`View` documents are visible to every server running the add-in. To stop multiple
+servers from all refreshing the same (possibly remote) databases, each add-in
+instance has a **scope**, chosen on the load line:
+
+| Load command | Scope |
+|---|---|
+| `load runjava ViewsHelper viewshelper.nsf` | **Current server only** (default) — processes only documents whose **Server** is blank (local) or matches this server's name. |
+| `load runjava ViewsHelper viewshelper.nsf all` | **All servers** — processes every configuration document regardless of its **Server** field. |
+
+Scope is a **per-server, load-time** setting (it is *not* stored in the database), so
+each server controls its own behavior even though they share one replicated config.
+
+> **Upgrade note:** the default changed to *current server only*. If you previously
+> relied on one server refreshing databases hosted on **other** servers (a **Server**
+> field pointing elsewhere), load that instance with the `all` argument, or those
+> documents will be skipped. Use `tell ViewsHelper info` to confirm the active scope.
+
 ## Process: register a database for view refresh
 
 1. Open the configuration database (`viewshelper.nsf`).
@@ -73,10 +93,11 @@ views.
 
 | Command | Effect |
 |---|---|
-| `load runjava ViewsHelper viewshelper.nsf` | Start the task against a config database. |
+| `load runjava ViewsHelper viewshelper.nsf` | Start the task against a config database (current-server scope). |
+| `load runjava ViewsHelper viewshelper.nsf all` | Start the task processing **all servers'** databases. |
 | `tell ViewsHelper update`  | Reload configuration after editing **View** documents. |
 | `tell ViewsHelper trigger` | Refresh all configured views **right now**. |
-| `tell ViewsHelper info`    | Show version + number of registered databases. |
+| `tell ViewsHelper info`    | Show version, active scope, and number of registered databases. |
 | `tell ViewsHelper help`    | Show all commands. |
 | `tell ViewsHelper quit`    | Unload the task. |
 
